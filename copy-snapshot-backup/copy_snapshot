@@ -1,0 +1,15 @@
+$resourceGroupName="mahi-test"
+$sourceSnapshotName="testsnap"
+$targetSnapshotName="copysnap1"
+$targetRegion="eastus2"
+#Set-AzContext -Subscription $subscriptionId
+$sourceSnapshot=Get-AzSnapshot -ResourceGroupName $resourceGroupName -SnapshotName $sourceSnapshotName
+$snapshotconfig = New-AzSnapshotConfig -Location $targetRegion -CreateOption CopyStart -Incremental -SourceResourceId $sourceSnapshot.Id
+New-AzSnapshot -ResourceGroupName $resourceGroupName -SnapshotName $targetSnapshotName -Snapshot $snapshotconfig
+do {
+    Start-Sleep -Seconds 10 # Wait for 10 seconds before checking the status again
+    $targetSnapshot = Get-AzSnapshot -ResourceGroupName $resourceGroupName -SnapshotName $targetSnapshotName
+    $completionPercent = $targetSnapshot.CompletionPercent
+    Write-Host "Snapshot copy in progress... Completion: $completionPercent%"
+} while ($completionPercent -ne 100)
+Write-Host "Snapshot copy completed successfully."
